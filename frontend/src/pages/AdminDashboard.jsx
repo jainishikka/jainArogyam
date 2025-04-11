@@ -5,7 +5,6 @@ import envt_imports from "../envt_imports/envt_imports";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -31,7 +30,7 @@ const AdminDashboard = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchMobileNumber, setSearchMobileNumber] = useState("");
-const [searchName, setSearchName] = useState("");
+  const [searchName, setSearchName] = useState("");
 
   const fetchActivePatients = async (queryConditions = []) => {
     try {
@@ -49,63 +48,11 @@ const [searchName, setSearchName] = useState("");
     }
   };
 
-  // const handleFinalizeRecord = async (patient) => {
-  //   const requiredFields = [
-  //     { field: "PatientProblem", label: "Patient Problem" },
-  //     { field: "DoctorAttended", label: "Doctor Attended" },
-  //     { field: "TreatmentDone", label: "Treatment Done" },
-  //     { field: "Payment", label: "Payment" },
-  //     { field: "PaymentMode", label: "Payment Mode" },
-  //   ];
-  
-  //   // Check if any required field is empty
-  //   const missingFields = requiredFields.filter(
-  //     ({ field }) => !patient[field] || patient[field].toString().trim() === ""
-  //   );
-  
-  //   if (missingFields.length > 0) {
-  //     const missingFieldNames = missingFields.map((f) => f.label).join(", ");
-  //     toast.error(`Please fill in the following required fields: ${missingFieldNames}`);
-  //     return; // Exit the function early if validation fails
-  //   }
-  //   try {
-  //     const { $id, $databaseId, $collectionId, $createdAt, $updatedAt, AppointmentDate, ...dataToMove } = patient;
-
-  //     const dataToInsert = {
-  //       ...dataToMove,
-  //       AppointmentDates: AppointmentDate || null,
-  //     };
-
-  //     const existingFinalRecord = await databases.listDocuments(DATABASE_ID, FINAL_COLLECTION_ID, [
-  //       Query.equal("RegistrationNumber", patient.RegistrationNumber),
-  //     ]);
-
-  //     if (existingFinalRecord.documents.length > 0) {
-  //       await databases.updateDocument(
-  //         DATABASE_ID,
-  //         FINAL_COLLECTION_ID,
-  //         existingFinalRecord.documents[0].$id,
-  //         dataToInsert
-  //       );
-  //     } else {
-  //       await databases.createDocument(DATABASE_ID, FINAL_COLLECTION_ID, "unique()", dataToInsert);
-  //     }
-
-  //     await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, $id);
-  //     setPatients((prev) => prev.filter((p) => p.$id !== $id));
-  //     toast.success("Record successfully finalized.");
-  //   } catch (error) {
-  //     console.error("Error finalizing record:", error);
-  //     toast.error(`Failed to finalize the record. Error: ${error.message}`);
-  //   }
-  // };
-
   const handleFinalizeRecord = async (patient) => {
     const requiredFields = [
       { field: "PatientProblem", label: "Patient Problem" },
       { field: "DoctorAttended", label: "Doctor Attended" },
       { field: "TreatmentDone", label: "Treatment Done" },
-      // { field: "Payment", label: "Payment" },
       { field: "PaymentMode", label: "Payment Mode" },
     ];
   
@@ -127,7 +74,6 @@ const [searchName, setSearchName] = useState("");
       const dataToInsert = {
         ...dataToMove,
         AppointmentDates: AppointmentDate || null,
-        // FinalizedAt: new Date().toISOString(), // Add a timestamp to differentiate records
       };
   
       // Always create a new record in the FINAL_COLLECTION_ID
@@ -144,6 +90,7 @@ const [searchName, setSearchName] = useState("");
       toast.error(`Failed to finalize the record. Error: ${error.message}`);
     }
   };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
@@ -156,21 +103,13 @@ const [searchName, setSearchName] = useState("");
         const endTo = new Date(searchDateTo).setHours(23, 59, 59, 999);
         queryConditions.push(Query.between("AppointmentDate", startFrom, new Date(endTo).toISOString()));
       }
-      // if (searchMobileNumber) {
-      //   queryConditions.push(Query.equal("MobileNumber", searchMobileNumber));
-      // }
-
-      // if (searchName) {
-      //   queryConditions.push(Query.search("PatientName", searchName));
-      // }
-      // await fetchActivePatients(queryConditions);
 
       // Fetch all patients first
-    const response = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
-    const filteredPatients = response.documents.filter((patient) =>
-      patient.PatientName.toLowerCase().includes(searchName.toLowerCase())
-    );
-    setPatients(filteredPatients);
+      const response = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
+      const filteredPatients = response.documents.filter((patient) =>
+        patient.PatientName.toLowerCase().includes(searchName.toLowerCase())
+      );
+      setPatients(filteredPatients);
     } catch (error) {
       console.error("Error during search:", error);
       setErrorMessage("Search failed. Please check your input and try again.");
@@ -196,7 +135,7 @@ const [searchName, setSearchName] = useState("");
     setSortConfig({ field, direction });
   
     const sortedPatients = [...patients].sort((a, b) => {
-      const valA = a[field] || ""; // Handle null/undefined gracefully
+      const valA = a[field] || "";
       const valB = b[field] || "";
   
       if (typeof valA === "string" && typeof valB === "string") {
@@ -210,15 +149,11 @@ const [searchName, setSearchName] = useState("");
           ? new Date(valA) - new Date(valB)
           : new Date(valB) - new Date(valA);
       }
-      return 0; // Default case
+      return 0;
     });
   
     setPatients(sortedPatients);
   };
-  
-  
-  
-
   
   useEffect(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
@@ -268,7 +203,6 @@ const [searchName, setSearchName] = useState("");
         dataToUpdate.Payment = Number(dataToUpdate.Payment) || 0;
       }
       
-  
       const response = await databases.updateDocument(DATABASE_ID, COLLECTION_ID, id, dataToUpdate);
   
       setPatients((prev) =>
@@ -291,20 +225,18 @@ const [searchName, setSearchName] = useState("");
   const headers = [
     { label: "Registration Number", field: "RegistrationNumber" },
     { label: "Appointment Date", field: "AppointmentDate" },
+    { label: "Appointment Time", field: "AppointmentTime" },
     { label: "Patient Name", field: "PatientName" },
     { label: "Patient Problem", field: "PatientProblem" },
     { label: "Doctor Attended", field: "DoctorAttended" },
     { label: "Treatment Done", field: "TreatmentDone" },
     { label: "Package Purchased", field: "PackagePurchased" },
-    // { label: "Current Session", field: "RemainingSessions" },  //ONLY CHANGED REMAINING SESSION TO CURRENT SESSION IN UI AT THIS PLACE ONLY.
     { label: "Payment Received", field: "PaymentReceived" },
-    { label: "Payment", field: "Payment" }, // New column
+    { label: "Payment", field: "Payment" },
     { label: "Payment Mode", field: "PaymentMode" },
     { label: "Remarks", field: "Remarks" },
   ];
   
-  
-
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 p-6 overflow-hidden">
       <div className="max-w-full mx-auto bg-white rounded-lg shadow-xl p-6">
@@ -325,12 +257,6 @@ const [searchName, setSearchName] = useState("");
           >
             Historical Data
           </button>
-          {/* <button
-            onClick={() => navigate("/signup")}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all"
-          >
-            New Entry
-          </button> */}
           <button
             onClick={() => navigate("/login")}
             className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-all"
@@ -341,48 +267,41 @@ const [searchName, setSearchName] = useState("");
   
         {/* Search Form */}
         <form onSubmit={handleSearch} className="mb-6 flex flex-col md:flex-row gap-4">
-  <input
-    type="date"
-    value={searchDateFrom}
-    onChange={(e) => setSearchDateFrom(e.target.value)}
-    placeholder="From Date"
-    className="border rounded-lg px-4 py-2 w-full"
-  />
-  <input
-    type="date"
-    value={searchDateTo}
-    onChange={(e) => setSearchDateTo(e.target.value)}
-    placeholder="To Date"
-    className="border rounded-lg px-4 py-2 w-full"
-  />
-  <input
-    type="text"
-    value={searchRegNumber}
-    onChange={(e) => setSearchRegNumber(e.target.value)}
-    placeholder="Registration Number"
-    className="border rounded-lg px-4 py-2 w-full"
-  />
-  {/* <input
-    type="text"
-    value={searchMobileNumber}
-    onChange={(e) => setSearchMobileNumber(e.target.value)}
-    placeholder="Mobile Number"
-    className="border rounded-lg px-4 py-2 w-full"
-  /> */}
-  <input
-    type="text"
-    value={searchName}
-    onChange={(e) => setSearchName(e.target.value)}
-    placeholder="Name"
-    className="border rounded-lg px-4 py-2 w-full"
-  />
-  <button
-    type="submit"
-    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all"
-  >
-    Search
-  </button>
-</form>;
+          <input
+            type="date"
+            value={searchDateFrom}
+            onChange={(e) => setSearchDateFrom(e.target.value)}
+            placeholder="From Date"
+            className="border rounded-lg px-4 py-2 w-full"
+          />
+          <input
+            type="date"
+            value={searchDateTo}
+            onChange={(e) => setSearchDateTo(e.target.value)}
+            placeholder="To Date"
+            className="border rounded-lg px-4 py-2 w-full"
+          />
+          <input
+            type="text"
+            value={searchRegNumber}
+            onChange={(e) => setSearchRegNumber(e.target.value)}
+            placeholder="Registration Number"
+            className="border rounded-lg px-4 py-2 w-full"
+          />
+          <input
+            type="text"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            placeholder="Name"
+            className="border rounded-lg px-4 py-2 w-full"
+          />
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all"
+          >
+            Search
+          </button>
+        </form>
   
         {/* Error Message */}
         {errorMessage && (
@@ -399,161 +318,155 @@ const [searchName, setSearchName] = useState("");
         ) : (
           <div className="w-full overflow-x-auto">
             <table className="table-auto w-full border-collapse border border-gray-300">
-                <thead>
-<tr className="bg-gray-200">
-  {headers.map(({ label, field }) => (
-    <th
-      key={field}
-      className="px-6 py-2 border border-gray-300 text-left cursor-pointer"
-      onClick={() => sortPatients(field)}
-    >
-      {label}
-      <span className="ml-2">
-        {sortConfig.field === field && (
-          sortConfig.direction === "asc" ? (
-            <i className="fas fa-arrow-up text-gray-500"></i>
-          ) : (
-            <i className="fas fa-arrow-down text-gray-500"></i>
-          )
-        )}
-      </span>
-    </th>
-  ))}
-</tr>
-</thead>
-
-
-<tbody>
-{patients.length > 0 ? (
-  patients.map((patient) => (
-    <tr key={patient.$id}>
-      {[
-        { field: "RegistrationNumber", type: "text", minWidth: "200px" },
-        {
-          field: "AppointmentDate",
-          type: "date",
-          minWidth: "150px",
-          formatValue: (value) =>
-            value ? new Date(value).toISOString().slice(0, 10) : "", // Ensure correct date format
-        },
-        { field: "PatientName", type: "text", minWidth: "250px" },
-        { field: "PatientProblem", type: "text", minWidth: "300px" },
-        { field: "DoctorAttended", type: "text", minWidth: "200px" },
-        { field: "TreatmentDone", type: "text", minWidth: "200px" },
-      ].map(({ field, type, minWidth, formatValue }) => (
-        <td
-          key={`${patient.$id}-${field}`}
-          className="px-6 py-2 border"
-          style={{ minWidth }}
-        >
-          <input
-            type={type}
-            value={
-              formatValue ? formatValue(patient[field]) : patient[field] || ""
-            }
-            onChange={(e) =>
-              handleFieldChange(patient.$id, field, e.target.value)
-            }
-            className="border rounded px-2 py-1 w-full"
-            
-          />
-        </td>
-      ))}
-      <td className="px-6 py-2 border text-center">
-        <input
-          type="checkbox"
-          checked={patient.PackagePurchased || false}
-          onChange={(e) =>
-            handleFieldChange(patient.$id, "PackagePurchased", e.target.checked)
-          }
-          className="h-5 w-5"
-          
-        />
-      </td>
-      {/* <td className="px-6 py-2 border">
-        <input
-          type="number"
-          value={patient.RemainingSessions || 0}
-          onChange={(e) =>
-            handleFieldChange(
-              patient.$id,
-              "RemainingSessions",
-              Math.max(0, parseInt(e.target.value, 10) || 0)
-            )
-          }
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td> */}
-      <td className="px-6 py-2 border text-center">
-        <input
-          type="checkbox"
-          checked={patient.PaymentReceived || false}
-          onChange={(e) =>
-            handleFieldChange(patient.$id, "PaymentReceived", e.target.checked)
-          }
-          className="h-5 w-5"
-        />
-      </td>
-      <td className="px-6 py-2 border">
-  <input
-    type="number"
-    value={patient.Payment || 0}
-    onChange={(e) =>
-      handleFieldChange(patient.$id, "Payment", parseInt(e.target.value, 10) || 0)
-    }
-    
-    className="border rounded px-2 py-1 w-full"
-  />
-</td>
-
-<td className="px-6 py-2 border">
-  <select
-    value={patient.PaymentMode || ""}
-    onChange={(e) =>
-      handleFieldChange(patient.$id, "PaymentMode", e.target.value)
-    }
-    className="border rounded px-2 py-1 w-full bg-yellow-100 focus:ring-2 focus:ring-yellow-400"
-  >
-    <option value="" disabled>
-      Select Payment Mode
-    </option>
-    <option value="cash">Cash</option>
-    <option value="upi">UPI</option>
-    <option value="at subscription">At Subscription</option>
-  </select>
-</td>
-
-      <td className="px-6 py-2 border">
-        <input
-          type="text"
-          value={patient.Remarks || ""}
-          onChange={(e) =>
-            handleFieldChange(patient.$id, "Remarks", e.target.value)
-          }
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-      <td className="px-6 py-2 border text-center">
-        <button
-          onClick={() => handleFinalizeRecord(patient)}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-          aria-label={`Finalize record for ${patient.PatientName}`}
-        >
-          Finalize
-        </button>
-      </td>
-    </tr>
-  ))
-) : (
-  <tr>
-    <td colSpan="12" className="text-center py-4">
-      No records found
-    </td>
-  </tr>
-)}
-</tbody>
-
-
+              <thead>
+                <tr className="bg-gray-200">
+                  {headers.map(({ label, field }) => (
+                    <th
+                      key={field}
+                      className="px-6 py-2 border border-gray-300 text-left cursor-pointer"
+                      onClick={() => sortPatients(field)}
+                    >
+                      {label}
+                      <span className="ml-2">
+                        {sortConfig.field === field && (
+                          sortConfig.direction === "asc" ? (
+                            <i className="fas fa-arrow-up text-gray-500"></i>
+                          ) : (
+                            <i className="fas fa-arrow-down text-gray-500"></i>
+                          )
+                        )}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+  
+              <tbody>
+                {patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <tr key={patient.$id}>
+                      {[
+                        { field: "RegistrationNumber", type: "text", minWidth: "200px" },
+                        {
+                          field: "AppointmentDate",
+                          type: "date",
+                          minWidth: "150px",
+                          formatValue: (value) =>
+                            value ? new Date(value).toISOString().slice(0, 10) : "",
+                        },
+                        {
+                          field: "AppointmentTime",
+                          type: "time",
+                          minWidth: "150px",
+                          formatValue: () =>
+                            patient.AppointmentDate ? format(new Date(patient.AppointmentDate), "HH:mm:ss") : "",
+                        },
+                        { field: "PatientName", type: "text", minWidth: "250px" },
+                        { field: "PatientProblem", type: "text", minWidth: "300px" },
+                        { field: "DoctorAttended", type: "text", minWidth: "200px" },
+                        { field: "TreatmentDone", type: "text", minWidth: "200px" },
+                      ].map(({ field, type, minWidth, formatValue }) => {
+                        // Compute the display value. For AppointmentTime, we use the computed format.
+                        const displayValue =
+                          field === "AppointmentTime"
+                            ? (patient.AppointmentDate ? format(new Date(patient.AppointmentDate), "HH:mm:ss") : "")
+                            : (formatValue ? formatValue(patient[field]) : patient[field] || "");
+  
+                        return (
+                          <td
+                            key={`${patient.$id}-${field}`}
+                            className="px-6 py-2 border"
+                            style={{ minWidth }}
+                          >
+                            <input
+                              type={type}
+                              value={displayValue}
+                              onChange={(e) =>
+                                field === "AppointmentTime"
+                                  ? null
+                                  : handleFieldChange(patient.$id, field, e.target.value)
+                              }
+                              className="border rounded px-2 py-1 w-full"
+                              readOnly={field === "AppointmentTime"}
+                            />
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-2 border text-center">
+                        <input
+                          type="checkbox"
+                          checked={patient.PackagePurchased || false}
+                          onChange={(e) =>
+                            handleFieldChange(patient.$id, "PackagePurchased", e.target.checked)
+                          }
+                          className="h-5 w-5"
+                        />
+                      </td>
+                      <td className="px-6 py-2 border text-center">
+                        <input
+                          type="checkbox"
+                          checked={patient.PaymentReceived || false}
+                          onChange={(e) =>
+                            handleFieldChange(patient.$id, "PaymentReceived", e.target.checked)
+                          }
+                          className="h-5 w-5"
+                        />
+                      </td>
+                      <td className="px-6 py-2 border">
+                        <input
+                          type="number"
+                          value={patient.Payment || 0}
+                          onChange={(e) =>
+                            handleFieldChange(patient.$id, "Payment", parseInt(e.target.value, 10) || 0)
+                          }
+                          className="border rounded px-2 py-1 w-full"
+                        />
+                      </td>
+                      <td className="px-6 py-2 border">
+                        <select
+                          value={patient.PaymentMode || ""}
+                          onChange={(e) =>
+                            handleFieldChange(patient.$id, "PaymentMode", e.target.value)
+                          }
+                          className="border rounded px-2 py-1 w-full bg-yellow-100 focus:ring-2 focus:ring-yellow-400"
+                        >
+                          <option value="" disabled>
+                            Select Payment Mode
+                          </option>
+                          <option value="cash">Cash</option>
+                          <option value="upi">UPI</option>
+                          <option value="at subscription">At Subscription</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-2 border">
+                        <input
+                          type="text"
+                          value={patient.Remarks || ""}
+                          onChange={(e) =>
+                            handleFieldChange(patient.$id, "Remarks", e.target.value)
+                          }
+                          className="border rounded px-2 py-1 w-full"
+                        />
+                      </td>
+                      <td className="px-6 py-2 border text-center">
+                        <button
+                          onClick={() => handleFinalizeRecord(patient)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                          aria-label={`Finalize record for ${patient.PatientName}`}
+                        >
+                          Finalize
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="12" className="text-center py-4">
+                      No records found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
         )}
@@ -589,7 +502,6 @@ const [searchName, setSearchName] = useState("");
       </div>
     </div>
   );
-  }
-
+};
 
 export default AdminDashboard;

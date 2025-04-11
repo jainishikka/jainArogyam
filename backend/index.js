@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import { createClient } from "redis";
+// import { createClient } from "redis";
+import redisClient from './redisClient.js'
 import { Client, Databases } from "node-appwrite";
 import envt_imports from './envt_imports/envt_imports.js'; 
 
@@ -24,11 +25,11 @@ appwriteClient
 const databases = new Databases(appwriteClient);
 
 // Redis Client Configuration
-const redisClient = createClient({
-    url: `redis://${envt_imports.redisHost}:${envt_imports.redisPort || 6379}`,
-});
+// const redisClient = createClient({
+//     url: `redis://${envt_imports.redisHost}:${envt_imports.redisPort || 6379}`,
+// });
 redisClient.on("error", (err) => console.error("Redis Client Error", err));
-redisClient.connect().then(() => console.log("Redis connected"));
+// redisClient.connect().then(() => console.log("Redis connected"));
 
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173' })); // Allow cross-origin requests

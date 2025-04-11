@@ -1,16 +1,17 @@
 import { createClient } from "redis";  
 import envt_imports from './envt_imports/envt_imports.js';  
+import {redisConfig} from  './envt_imports/envt_imports.js';
 
 const redisClient = createClient({
     socket: {
-        host: envt_imports.redisHost, 
-        port: envt_imports.redisPort, 
+        host: redisConfig.host, 
+        port: redisConfig.port, 
     },
    
 });
 
 // Handling the "connect" event
-redisClient.on("connect", () => {
+redisClient.on("connect", () => {   
     console.log("Connected to Redis successfully!");
 });
 

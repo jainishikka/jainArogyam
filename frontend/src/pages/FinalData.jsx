@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { Databases, Query, Client } from "appwrite";
 import envt_imports from "../envt_imports/envt_imports";
@@ -22,7 +23,6 @@ const FinalData = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [nameSearch, setNameSearch] = useState(""); 
   const [itemsPerPage] = useState(10);
-
 
   const fetchFinalizedPatients = async () => {
     let allPatients = [];
@@ -72,7 +72,6 @@ const FinalData = () => {
     }
   };
   
-  
   useEffect(() => {
     fetchFinalizedPatients();
   }, []);
@@ -94,7 +93,6 @@ const FinalData = () => {
     applyFilters();
   }, [startDate, endDate, registrationSearch, nameSearch, finalizedPatients]);
 
-
   const getStartAndEndOfDay = (dateString) => {
     const date = new Date(dateString);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0)).toISOString();
@@ -104,12 +102,10 @@ const FinalData = () => {
 
   // For dynamic pagination
   const totalPages = Math.max(1, Math.ceil(filteredPatients.length / itemsPerPage));
-const currentPageData = filteredPatients.slice(
-  (currentPage - 1) * itemsPerPage,
-  currentPage * itemsPerPage
-);
-
-
+  const currentPageData = filteredPatients.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -129,6 +125,7 @@ const currentPageData = filteredPatients.slice(
     const csvHeaders = [
       "Registration Number",
       "Appointment Date",
+      "Appointment Time",
       "Patient Name",
       "Patient Problem",
       "Doctor Attended",
@@ -144,10 +141,11 @@ const currentPageData = filteredPatients.slice(
     // Map data to ensure it aligns correctly with headers
     const csvContent = [
       csvHeaders.join(","),
-      ...filteredPatients.map((patient) => { // Fix: Use filteredPatients
+      ...filteredPatients.map((patient) => {
         return [
           patient.RegistrationNumber || "",
           patient.AppointmentDates ? new Date(patient.AppointmentDates).toLocaleDateString() : "N/A",
+          patient.AppointmentDates ? format(new Date(patient.AppointmentDates), "HH:mm:ss") : "N/A",
           patient.PatientName || "",
           patient.PatientProblem || "",
           patient.DoctorAttended || "",
@@ -162,7 +160,6 @@ const currentPageData = filteredPatients.slice(
       }),
     ].join("\n");
     
-
     // Create and download the CSV file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -191,7 +188,6 @@ const currentPageData = filteredPatients.slice(
     setFilteredPatients(sortedPatients); // Fix: Apply sorting to filteredPatients
   };
   
-
   const getSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === "asc" ? "▲" : "▼";
@@ -199,8 +195,6 @@ const currentPageData = filteredPatients.slice(
     return "⇅";
   };
 
-
-  
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 p-6 overflow-hidden">
       <div className="max-w-full mx-auto bg-white rounded-lg shadow-xl p-6">
@@ -246,19 +240,18 @@ const currentPageData = filteredPatients.slice(
         </div>
 
         <div className="flex gap-4 mt-4">
-        <button
-          onClick={downloadData}
-          className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-green-600 transition-all"
-        >
-          Download Data
-        </button>
+          <button
+            onClick={downloadData}
+            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-green-600 transition-all"
+          >
+            Download Data
+          </button>
 
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-all">
-  Showing {currentPageData.length} records out of {filteredPatients.length} total
-</button>
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-all">
+            Showing {currentPageData.length} records out of {filteredPatients.length} total
+          </button>
+        </div>
 
-
-      </div>
         {isLoading ? (
           <div className="flex justify-center py-6">
             <div className="loader ease-linear rounded-full border-8 border-t-8 border-indigo-300 h-16 w-16"></div>
@@ -266,80 +259,84 @@ const currentPageData = filteredPatients.slice(
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto border-collapse border border-gray-300 shadow-md">
-            <thead>
-  <tr className="bg-indigo-100 text-gray-700">
-    {[
-      { key: "RegistrationNumber", label: "Registration Number" },
-      { key: "AppointmentDates", label: "Appointment Date" },
-      { key: "PatientName", label: "Patient Name" },
-      { key: "PatientProblem", label: "Patient Problem" },
-      { key: "DoctorAttended", label: "Doctor Attended" },
-      { key: "TreatmentDone", label: "Treatment Done" },
-      { key: "PackagePurchased", label: "Package Purchased" },
-      { key: "RemainingSessions", label: "Remaining Sessions" },
-      { key: "Payment Received", label: "Payment Received" },
-      { key: "Payment", label: "Payment" },
-      { key: "PaymentMode", label: "Payment Mode" },
-      { key: "Remarks", label: "Remarks" },
-    ].map((column) => (
-      <th
-        key={column.key}
-        className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold cursor-pointer"
-        onClick={() => sortData(column.key)}
-      >
-        {column.label} <span>{getSortIcon(column.key)}</span>
-      </th>
-    ))}
-  </tr>
-</thead>
+              <thead>
+                <tr className="bg-indigo-100 text-gray-700">
+                  {[
+                    { key: "RegistrationNumber", label: "Registration Number" },
+                    { key: "AppointmentDates", label: "Appointment Date" },
+                    { key: "AppointmentTime", label: "Appointment Closed At" },
+                    { key: "PatientName", label: "Patient Name" },
+                    { key: "PatientProblem", label: "Patient Problem" },
+                    { key: "DoctorAttended", label: "Doctor Attended" },
+                    { key: "TreatmentDone", label: "Treatment Done" },
+                    { key: "PackagePurchased", label: "Package Purchased" },
+                    { key: "RemainingSessions", label: "Remaining Sessions" },
+                    { key: "PaymentReceived", label: "Payment Received" },
+                    { key: "Payment", label: "Payment" },
+                    { key: "PaymentMode", label: "Payment Mode" },
+                    { key: "Remarks", label: "Remarks" },
+                  ].map((column) => (
+                    <th
+                      key={column.key}
+                      className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold cursor-pointer"
+                      onClick={() => sortData(column.key)}
+                    >
+                      {column.label} <span>{getSortIcon(column.key)}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-<tbody>
-  {currentPageData.length > 0 ? (
-    currentPageData.map((patient) => (
-      <tr key={patient.$id} className="border-b hover:bg-indigo-50">
-        {[
-          "RegistrationNumber",
-          "AppointmentDates",
-          "PatientName",
-          "PatientProblem",
-          "DoctorAttended",
-          "TreatmentDone",
-          "PackagePurchased",
-          "RemainingSessions",
-          "PaymentReceived",
-          "Payment",
-          "PaymentMode", // Corrected: Ensure it matches the backend attribute
-          "Remarks",
-        ].map((field) => (
-          <td key={field} className="border border-gray-300 px-6 py-3 text-sm">
-            {field === "AppointmentDates"
-              ? patient[field]
-                ? new Date(patient[field]).toLocaleDateString()
-                : "N/A"
-              : field === "PackagePurchased" || field === "PaymentReceived"
-              ? (
-                  <input
-                    type="checkbox"
-                    checked={patient[field] === true}
-                    disabled
-                    className="w-5 h-5"
-                  />
-                )
-              : patient[field] || "N/A"}
-          </td>
-        ))}
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="10" className="text-center py-4 text-sm text-gray-600">
-        No records found.
-      </td>
-    </tr>
-  )}
-</tbody>
-
-   
+              <tbody>
+                {currentPageData.length > 0 ? (
+                  currentPageData.map((patient) => (
+                    <tr key={patient.$id} className="border-b hover:bg-indigo-50">
+                      {[
+                        "RegistrationNumber",
+                        "AppointmentDates",
+                        "AppointmentTime",
+                        "PatientName",
+                        "PatientProblem",
+                        "DoctorAttended",
+                        "TreatmentDone",
+                        "PackagePurchased",
+                        "RemainingSessions",
+                        "PaymentReceived",
+                        "Payment",
+                        "PaymentMode",
+                        "Remarks",
+                      ].map((field) => (
+                        <td key={field} className="border border-gray-300 px-6 py-3 text-sm">
+                          {field === "AppointmentDates"
+                            ? patient[field]
+                              ? new Date(patient[field]).toLocaleDateString()
+                              : "N/A"
+                            : field === "AppointmentTime"
+                            ? patient.AppointmentDates
+                              ? format(new Date(patient.AppointmentDates), "HH:mm:ss")
+                              : "N/A"
+                            : field === "PackagePurchased" || field === "PaymentReceived"
+                            ? (
+                                <input
+                                  type="checkbox"
+                                  checked={patient[field] === true}
+                                  disabled
+                                  className="w-5 h-5"
+                                />
+                              )
+                            : patient[field] || "N/A"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="13" className="text-center py-4 text-sm text-gray-600">
+                      No records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
         )}
