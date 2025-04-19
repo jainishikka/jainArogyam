@@ -23,8 +23,11 @@ const FinalData = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [appointmentClosedAtMap, setAppointmentClosedAtMap] = useState(() => {
+    const stored = localStorage.getItem("appointmentClosedAtMap");
+    return stored ? JSON.parse(stored) : {};
+  });
 
-  // Compute total payment for filtered patients
   const totalPayment = useMemo(() => {
     return filteredPatients.reduce((sum, patient) => {
       const payment = parseFloat(patient.Payment) || 0;
@@ -70,7 +73,6 @@ const FinalData = () => {
       }
 
       setFinalizedPatients(allPatients);
-      setFilteredPatients(allPatients);
     } catch (err) {
       console.error("Error fetching finalized patients:", err);
     } finally {
@@ -82,8 +84,29 @@ const FinalData = () => {
     fetchFinalizedPatients();
   }, []);
 
+  // Store AppointmentClosedAt timestamps only once per record
+  useEffect(() => {
+    setAppointmentClosedAtMap(prevMap => {
+      const newMap = { ...prevMap };
+      let updated = false;
+
+      finalizedPatients.forEach(patient => {
+        if (!newMap[patient.$id]) {
+          newMap[patient.$id] = format(new Date(), "HH:mm:ss");
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        localStorage.setItem("appointmentClosedAtMap", JSON.stringify(newMap));
+      }
+
+      return newMap;
+    });
+  }, [finalizedPatients]);
+
   const applyFilters = () => {
-    const filtered = finalizedPatients.filter((patient) => {
+    const filtered = finalizedPatients.filter(patient => {
       const date = new Date(patient.AppointmentDates);
       return (
         (!startDate || date >= new Date(startDate)) &&
@@ -100,33 +123,44 @@ const FinalData = () => {
     applyFilters();
   }, [startDate, endDate, registrationSearch, nameSearch, finalizedPatients]);
 
-  const getStartAndEndOfDay = (dateString) => {
+  const getStartAndEndOfDay = dateString => {
     const date = new Date(dateString);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0)).toISOString();
     const endOfDay = new Date(date.setHours(23, 59, 59, 999)).toISOString();
     return { startOfDay, endOfDay };
   };
 
-  // Pagination setup
   const totalPages = Math.max(1, Math.ceil(filteredPatients.length / itemsPerPage));
   const currentPageData = filteredPatients.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const paginate = (page) => setCurrentPage(page);
+  const paginate = page => setCurrentPage(page);
   const handlePrevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
   const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   const downloadData = () => {
     const headers = [
-      "Registration Number", "Appointment Date", "Appointment Time", "Patient Name",
-      "Patient Problem", "Doctor Attended", "Treatment Done", "Package Purchased",
-      "Remaining Sessions", "Payment Received", "Payment Mode", "Payment", "Remarks"
+      "Registration Number",
+      "Appointment Date",
+      "Appointment Closed At",
+      "Appointment Time",
+      "Patient Name",
+      "Patient Problem",
+      "Doctor Attended",
+      "Treatment Done",
+      "Package Purchased",
+      "Remaining Sessions",
+      "Payment Received",
+      "Payment Mode",
+      "Payment",
+      "Remarks"
     ];
     const rows = filteredPatients.map(p => [
       p.RegistrationNumber || "",
       p.AppointmentDates ? new Date(p.AppointmentDates).toLocaleDateString() : "",
+      appointmentClosedAtMap[p.$id] || "",
       p.AppointmentDates ? format(new Date(p.AppointmentDates), "HH:mm:ss") : "",
       p.PatientName || "",
       p.PatientProblem || "",
@@ -149,21 +183,21 @@ const FinalData = () => {
     link.click();
   };
 
-  const sortData = (key) => {
+  const sortData = key => {
     let dir = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") dir = "desc";
     setSortConfig({ key, direction: dir });
-    const sorted = [...filteredPatients].sort((a, b) => {
-      if (dir === "asc") return a[key] > b[key] ? 1 : -1;
-      return a[key] < b[key] ? 1 : -1;
-    });
+    const sorted = [...filteredPatients].sort((a, b) =>
+      dir === "asc"
+        ? (a[key] > b[key] ? 1 : -1)
+        : (a[key] < b[key] ? 1 : -1)
+    );
     setFilteredPatients(sorted);
   };
 
-  const getSortIcon = (key) => {
-    if (sortConfig.key === key) return sortConfig.direction === "asc" ? "▲" : "▼";
-    return "⇅";
-  };
+  const getSortIcon = key => sortConfig.key === key
+    ? (sortConfig.direction === "asc" ? "▲" : "▼")
+    : "⇅";
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 p-6 overflow-hidden">
@@ -178,27 +212,65 @@ const FinalData = () => {
         <div className="flex flex-wrap gap-6 mb-8 items-center justify-center">
           <div className="flex flex-col">
             <label htmlFor="startDate" className="text-sm font-semibold mb-2">Start Date</label>
-            <input type="date" id="startDate" value={startDate} onChange={e => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+            <input
+              type="date"
+              id="startDate"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2"
+            />
           </div>
           <div className="flex flex-col">
             <label htmlFor="endDate" className="text-sm font-semibold mb-2">End Date</label>
-            <input type="date" id="endDate" value={endDate} onChange={e => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+            <input
+              type="date"
+              id="endDate"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2"
+            />
           </div>
           <div className="flex flex-col">
             <label htmlFor="registrationSearch" className="text-sm font-semibold mb-2">Registration Number</label>
-            <input type="text" id="registrationSearch" value={registrationSearch} onChange={e => setRegistrationSearch(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+            <input
+              type="text"
+              id="registrationSearch"
+              value={registrationSearch}
+              onChange={e => setRegistrationSearch(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2"
+            />
           </div>
           <div className="flex flex-col">
             <label htmlFor="nameSearch" className="text-sm font-semibold mb-2">Patient Name</label>
-            <input type="text" id="nameSearch" value={nameSearch} onChange={e => setNameSearch(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+            <input
+              type="text"
+              id="nameSearch"
+              value={nameSearch}
+              onChange={e => setNameSearch(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2"
+            />
           </div>
-          <button onClick={fetchFinalizedPatients} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-all">Search</button>
+          <button
+            onClick={fetchFinalizedPatients}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-all"
+          >
+            Search
+          </button>
         </div>
 
         <div className="flex gap-4 mb-6">
-          <button onClick={downloadData} className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all">Download Data</button>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">Showing {currentPageData.length} of {filteredPatients.length}</button>
-          <button className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-all">Total Payment: {totalPayment}</button>
+          <button
+            onClick={downloadData}
+            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all"
+          >
+            Download Data
+          </button>
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">
+            Showing {currentPageData.length} of {filteredPatients.length}
+          </button>
+          <button className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-all">
+            Total Payment: ₹{totalPayment.toLocaleString('en-IN')}
+          </button>
         </div>
 
         {isLoading ? (
@@ -210,10 +282,11 @@ const FinalData = () => {
             <table className="min-w-full table-auto border-collapse border border-gray-300 shadow-md">
               <thead>
                 <tr className="bg-indigo-100 text-gray-700">
-                  {[
+                  {[ 
                     { key: "RegistrationNumber", label: "Registration Number" },
                     { key: "AppointmentDates", label: "Appointment Date" },
-                    { key: "AppointmentTime", label: "Appointment Closed At" },
+                    { key: "AppointmentClosedAt", label: "Appointment Closed At" },
+                    { key: "AppointmentTime", label: "Appointment Time" },
                     { key: "PatientName", label: "Patient Name" },
                     { key: "PatientProblem", label: "Patient Problem" },
                     { key: "DoctorAttended", label: "Doctor Attended" },
@@ -223,10 +296,14 @@ const FinalData = () => {
                     { key: "PaymentReceived", label: "Payment Received" },
                     { key: "Payment", label: "Payment" },
                     { key: "PaymentMode", label: "Payment Mode" },
-                    { key: "Remarks", label: "Remarks" },
-                  ].map(column => (
-                    <th key={column.key} className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold cursor-pointer" onClick={() => sortData(column.key)}>
-                      {column.label} {getSortIcon(column.key)}
+                    { key: "Remarks", label: "Remarks" }
+                  ].map(col => (
+                    <th
+                      key={col.key}
+                      className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold cursor-pointer"
+                      onClick={() => sortData(col.key)}
+                    >
+                      {col.label} {getSortIcon(col.key)}
                     </th>
                   ))}
                 </tr>
@@ -236,18 +313,34 @@ const FinalData = () => {
                   currentPageData.map(patient => (
                     <tr key={patient.$id} className="border-b hover:bg-indigo-50">
                       {[
-                        "RegistrationNumber", "AppointmentDates", "AppointmentTime",
-                        "PatientName", "PatientProblem", "DoctorAttended", "TreatmentDone",
-                        "PackagePurchased", "RemainingSessions", "PaymentReceived",
-                        "Payment", "PaymentMode", "Remarks"
+                        "RegistrationNumber",
+                        "AppointmentDates",
+                        "AppointmentClosedAt",
+                        "AppointmentTime",
+                        "PatientName",
+                        "PatientProblem",
+                        "DoctorAttended",
+                        "TreatmentDone",
+                        "PackagePurchased",
+                        "RemainingSessions",
+                        "PaymentReceived",
+                        "Payment",
+                        "PaymentMode",
+                        "Remarks"
                       ].map(field => (
                         <td key={field} className="border border-gray-300 px-6 py-3 text-sm">
                           {field === "AppointmentDates"
-                            ? patient[field] ? new Date(patient[field]).toLocaleDateString() : "N/A"
+                            ? (patient.AppointmentDates
+                                ? new Date(patient.AppointmentDates).toLocaleDateString()
+                                : "N/A")
+                            : field === "AppointmentClosedAt"
+                            ? (appointmentClosedAtMap[patient.$id] || "N/A")
                             : field === "AppointmentTime"
-                            ? patient.AppointmentDates ? format(new Date(patient.AppointmentDates), "HH:mm:ss") : "N/A"
+                            ? (patient.AppointmentDates
+                                ? format(new Date(patient.AppointmentDates), "HH:mm:ss")
+                                : "N/A")
                             : (field === "PackagePurchased" || field === "PaymentReceived")
-                            ? <input type="checkbox" checked={patient[field]} disabled className="w-5 h-5"/>
+                            ? <input type="checkbox" checked={patient[field]} disabled className="w-5 h-5" />
                             : patient[field] || "N/A"
                           }
                         </td>
@@ -255,20 +348,39 @@ const FinalData = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={13} className="text-center py-4 text-gray-600">No records found.</td></tr>
+                  <tr>
+                    <td colSpan={14} className="text-center py-4 text-gray-600">No records found.</td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Pagination */}
         <div className="flex justify-center mt-6">
-          <button onClick={handlePrevPage} disabled={currentPage === 1} className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 mr-2">Prev</button>
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 mr-2"
+          >
+            Prev
+          </button>
           {[...Array(totalPages)].map((_, i) => (
-            <button key={i} onClick={() => paginate(i+1)} className={`px-4 py-2 rounded-lg ${currentPage===i+1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-black'}`}>{i+1}</button>
+            <button
+              key={i}
+              onClick={() => paginate(i + 1)}
+              className={`px-4 py-2 rounded-lg ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-black'}`}
+            >
+              {i + 1}
+            </button>
           ))}
-          <button onClick={handleNextPage} disabled={currentPage===totalPages} className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 ml-2">Next</button>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 ml-2"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
