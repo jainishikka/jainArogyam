@@ -150,9 +150,9 @@ const FinalData = () => {
       "Patient Problem",
       "Doctor Attended",
       "Treatment Done",
-      "Package Purchased",
-      "Remaining Sessions",
-      "Payment Received",
+      // "Package Purchased",
+      // "Remaining Sessions",
+      // "Payment Received",
       "Payment Mode",
       "Payment",
       "Remarks"
@@ -166,9 +166,9 @@ const FinalData = () => {
       p.PatientProblem || "",
       p.DoctorAttended || "",
       p.TreatmentDone || "",
-      p.PackagePurchased || "",
-      p.RemainingSessions || "",
-      p.PaymentReceived || "",
+      // p.PackagePurchased || "",
+      // p.RemainingSessions || "",
+      // p.PaymentReceived || "",
       p.PaymentMode || "",
       p.Payment || "",
       p.Remarks || ""
@@ -291,9 +291,9 @@ const FinalData = () => {
                     { key: "PatientProblem", label: "Patient Problem" },
                     { key: "DoctorAttended", label: "Doctor Attended" },
                     { key: "TreatmentDone", label: "Treatment Done" },
-                    { key: "PackagePurchased", label: "Package Purchased" },
-                    { key: "RemainingSessions", label: "Remaining Sessions" },
-                    { key: "PaymentReceived", label: "Payment Received" },
+                    // { key: "PackagePurchased", label: "Package Purchased" },
+                    // { key: "RemainingSessions", label: "Remaining Sessions" },
+                    // { key: "PaymentReceived", label: "Payment Received" },
                     { key: "Payment", label: "Payment" },
                     { key: "PaymentMode", label: "Payment Mode" },
                     { key: "Remarks", label: "Remarks" }
@@ -309,50 +309,59 @@ const FinalData = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentPageData.length ? (
-                  currentPageData.map(patient => (
-                    <tr key={patient.$id} className="border-b hover:bg-indigo-50">
-                      {[
-                        "RegistrationNumber",
-                        "AppointmentDates",
-                        "AppointmentClosedAt",
-                        "AppointmentTime",
-                        "PatientName",
-                        "PatientProblem",
-                        "DoctorAttended",
-                        "TreatmentDone",
-                        "PackagePurchased",
-                        "RemainingSessions",
-                        "PaymentReceived",
-                        "Payment",
-                        "PaymentMode",
-                        "Remarks"
-                      ].map(field => (
-                        <td key={field} className="border border-gray-300 px-6 py-3 text-sm">
-                          {field === "AppointmentDates"
-                            ? (patient.AppointmentDates
-                                ? new Date(patient.AppointmentDates).toLocaleDateString()
-                                : "N/A")
-                            : field === "AppointmentClosedAt"
-                            ? (appointmentClosedAtMap[patient.$id] || "N/A")
-                            : field === "AppointmentTime"
-                            ? (patient.AppointmentDates
-                                ? format(new Date(patient.AppointmentDates), "HH:mm:ss")
-                                : "N/A")
-                            : (field === "PackagePurchased" || field === "PaymentReceived")
-                            ? <input type="checkbox" checked={patient[field]} disabled className="w-5 h-5" />
-                            : patient[field] || "N/A"
-                          }
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={14} className="text-center py-4 text-gray-600">No records found.</td>
-                  </tr>
-                )}
-              </tbody>
+  {currentPageData.length ? (
+    currentPageData.map(patient => (
+      <tr key={patient.$id} className="border-b hover:bg-indigo-50">
+        {[
+          "RegistrationNumber",
+          "AppointmentDates",
+          "AppointmentClosedAt",
+          "AppointmentTime",
+          "PatientName",
+          "PatientProblem",
+          "DoctorAttended",
+          "TreatmentDone",
+          // "PackagePurchased",
+          // "PackageReceived",
+          // "RemainingSessions",
+          // "PaymentReceived",
+          "Payment",
+          "PaymentMode",
+          "Remarks"
+        ]
+          // Filter out commented fields
+          .filter(
+            field =>
+              !["PackagePurchased", "PackageReceived", "RemainingSessions"].includes(field)
+          )
+          .map(field => (
+            <td key={field} className="border border-gray-300 px-6 py-3 text-sm">
+              {field === "AppointmentDates"
+                ? patient.AppointmentDates
+                  ? new Date(patient.AppointmentDates).toLocaleDateString()
+                  : "N/A"
+                : field === "AppointmentClosedAt"
+                ? appointmentClosedAtMap[patient.$id] || "N/A"
+                : field === "AppointmentTime"
+                ? patient.AppointmentDates
+                  ? format(new Date(patient.AppointmentDates), "HH:mm:ss")
+                  : "N/A"
+                : (field === "PackagePurchased" ||
+                   field === "PackageReceived" ||
+                   field === "PaymentReceived")
+                ? <input type="checkbox" checked={patient[field]} disabled className="w-5 h-5" />
+                : patient[field] || "N/A"}
+            </td>
+          ))}
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={14} className="text-center py-4 text-gray-600">No records found.</td>
+    </tr>
+  )}
+</tbody>
+
             </table>
           </div>
         )}

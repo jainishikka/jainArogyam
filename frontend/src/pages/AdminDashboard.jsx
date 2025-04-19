@@ -190,12 +190,12 @@ const AdminDashboard = () => {
         ...dataToUpdate
       } = updatedData;
   
-      if ("PackagePurchased" in dataToUpdate) {
-        dataToUpdate.PackagePurchased = Boolean(dataToUpdate.PackagePurchased);
-      }
-      if ("PaymentReceived" in dataToUpdate) {
-        dataToUpdate.PaymentReceived = Boolean(dataToUpdate.PaymentReceived);
-      }
+      // if ("PackagePurchased" in dataToUpdate) {
+      //   dataToUpdate.PackagePurchased = Boolean(dataToUpdate.PackagePurchased);
+      // }
+      // if ("PaymentReceived" in dataToUpdate) {
+      //   dataToUpdate.PaymentReceived = Boolean(dataToUpdate.PaymentReceived);
+      // }
       if ("RemainingSessions" in dataToUpdate) {
         dataToUpdate.RemainingSessions = Number(dataToUpdate.RemainingSessions) || 0;
       }
@@ -230,8 +230,8 @@ const AdminDashboard = () => {
     { label: "Patient Problem", field: "PatientProblem" },
     { label: "Doctor Attended", field: "DoctorAttended" },
     { label: "Treatment Done", field: "TreatmentDone" },
-    { label: "Package Purchased", field: "PackagePurchased" },
-    { label: "Payment Received", field: "PaymentReceived" },
+    // { label: "Package Purchased", field: "PackagePurchased" },
+    // { label: "Payment Received", field: "PaymentReceived" },
     { label: "Payment", field: "Payment" },
     { label: "Payment Mode", field: "PaymentMode" },
     { label: "Remarks", field: "Remarks" },
@@ -363,7 +363,7 @@ const AdminDashboard = () => {
                         },
                         { field: "PatientName", type: "text", minWidth: "250px" },
                         { field: "PatientProblem", type: "text", minWidth: "300px" },
-                        { field: "DoctorAttended", type: "text", minWidth: "200px" },
+                        { field: "DoctorAttended", type: "dropdown", minWidth: "200px" },
                         { field: "TreatmentDone", type: "text", minWidth: "200px" },
                       ].map(({ field, type, minWidth, formatValue }) => {
                         // Compute the display value. For AppointmentTime, we use the computed format.
@@ -374,10 +374,24 @@ const AdminDashboard = () => {
   
                         return (
                           <td
-                            key={`${patient.$id}-${field}`}
-                            className="px-6 py-2 border"
-                            style={{ minWidth }}
-                          >
+                          key={`${patient.$id}-${field}`}
+                          className="px-6 py-2 border"
+                          style={{ minWidth }}
+                        >
+                          {field === "DoctorAttended" ? (
+                            <select
+                              value={patient[field] || ""}
+                              onChange={(e) => handleFieldChange(patient.$id, field, e.target.value)}
+                              className="border rounded px-2 py-1 w-full"
+                            >
+                              <option value="">Select Doctor</option>
+                              {["D001", "D002", "D003", "D004", "D005", "D006", "D007"].map((docId) => (
+                                <option key={docId} value={docId}>
+                                  {docId}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
                             <input
                               type={type}
                               value={displayValue}
@@ -389,10 +403,12 @@ const AdminDashboard = () => {
                               className="border rounded px-2 py-1 w-full"
                               readOnly={field === "AppointmentTime"}
                             />
-                          </td>
+                          )}
+                        </td>
+                        
                         );
                       })}
-                      <td className="px-6 py-2 border text-center">
+                      {/* <td className="px-6 py-2 border text-center">
                         <input
                           type="checkbox"
                           checked={patient.PackagePurchased || false}
@@ -401,8 +417,8 @@ const AdminDashboard = () => {
                           }
                           className="h-5 w-5"
                         />
-                      </td>
-                      <td className="px-6 py-2 border text-center">
+                      </td> */}
+                      {/* <td className="px-6 py-2 border text-center">
                         <input
                           type="checkbox"
                           checked={patient.PaymentReceived || false}
@@ -411,7 +427,7 @@ const AdminDashboard = () => {
                           }
                           className="h-5 w-5"
                         />
-                      </td>
+                      </td> */}
                       <td className="px-6 py-2 border">
                         <input
                           type="number"
@@ -505,6 +521,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
-
-// **************************************
