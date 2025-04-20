@@ -1,25 +1,27 @@
+// appwrite/LLogin.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { setLoggedIn } from "../utils/auth";  // ← new
 
 const LLogin = () => {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate               = useNavigate();
 
   const ADMIN_PASSWORD = "password"; // Replace with your real admin password
   
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); // Reset any previous error
+    setError("");
 
     try {
       if (password === ADMIN_PASSWORD) {
-        // Admin login success
-        navigate("/admin-dashboard"); // Redirect to admin dashboard
+        setLoggedIn();                                // ← mark them in
+        navigate("/admin-dashboard", { replace: true });
       } else {
         setError("Invalid admin password.");
       }
@@ -27,7 +29,7 @@ const LLogin = () => {
       console.error("Login error:", err);
       setError("An error occurred during login. Please try again.");
     } finally {
-      setLoading(false); // Stop loading state
+      setLoading(false);
     }
   };
 
@@ -53,14 +55,9 @@ const LLogin = () => {
             />
           </div>
 
-          {/* Spinner when loading */}
           {loading && (
             <div className="flex justify-center py-4">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                spin
-                className="text-blue-500 text-3xl"
-              />
+              <FontAwesomeIcon icon={faSpinner} spin className="text-blue-500 text-3xl" />
             </div>
           )}
 
