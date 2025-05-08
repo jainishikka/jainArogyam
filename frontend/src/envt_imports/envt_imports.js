@@ -8,6 +8,8 @@ const envt_imports={
     appwriteDoctorId: String(import.meta.env.VITE_APPWRITE_DOCTOR_ID),
     appriteApiKey: String(import.meta.env.VITE_APPWRITE_API_KEY),
     appwriteFinalDataCollectionId:String(import.meta.env.VITE_APPWRITE_FINAL_DATA_COLLECTION_ID),
+    downloadPassword:String(import.meta.env.VITE_DOWNLOADPASSWORD),
+    adminPassword:String(import.meta.env.VITE_ADMIN_PASSWORD),
 
 }
 

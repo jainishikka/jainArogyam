@@ -3,16 +3,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { setLoggedIn } from "../utils/auth";  // ← new
+import { setLoggedIn } from "../utils/auth";
+import envt_imports from "../envt_imports/envt_imports";
 
 const LLogin = () => {
   const [password, setPassword] = useState("");
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate               = useNavigate();
+  const navigate = useNavigate();
 
-  const ADMIN_PASSWORD = "password"; // Replace with your real admin password
-  
+  const ADMIN_PASSWORD = envt_imports.adminPassword;
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -20,7 +21,7 @@ const LLogin = () => {
 
     try {
       if (password === ADMIN_PASSWORD) {
-        setLoggedIn();                                // ← mark them in
+        setLoggedIn();
         navigate("/admin-dashboard", { replace: true });
       } else {
         setError("Invalid admin password.");
@@ -37,12 +38,16 @@ const LLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-500">
       <div className="w-full max-w-md bg-white rounded-lg shadow-2xl p-8">
         <h1 className="text-3xl font-semibold text-center text-gray-800 mb-8">
-          Doctor Login <br/><span className="text-blue-500">Jain Arogyam</span>
+          Doctor Login <br />
+          <span className="text-blue-500">Jain Arogyam</span>
         </h1>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Doctor Password
             </label>
             <input
@@ -57,7 +62,11 @@ const LLogin = () => {
 
           {loading && (
             <div className="flex justify-center py-4">
-              <FontAwesomeIcon icon={faSpinner} spin className="text-blue-500 text-3xl" />
+              <FontAwesomeIcon
+                icon={faSpinner}
+                spin
+                className="text-blue-500 text-3xl"
+              />
             </div>
           )}
 

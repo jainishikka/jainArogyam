@@ -28,6 +28,13 @@ const RegisteredUsersData = () => {
   const [searchMobile, setSearchMobile] = useState("");
 const [searchName, setSearchName] = useState("");
 
+// Modal and password state
+const [showModal, setShowModal] = useState(false);
+const [passwordInput, setPasswordInput] = useState("");
+const [errorMsg, setErrorMsg] = useState("");
+// Set your download password here or load from env
+const DOWNLOAD_PASSWORD = envt_imports.downloadPassword;
+
 
 useEffect(() => {
   const lowerCaseMobile = searchMobile.toLowerCase();
@@ -82,7 +89,7 @@ useEffect(() => {
     fetchUsers();
   }, []);
 
-  const downloadData = () => {
+  const handleCSVDownload = () => {
     const csvHeaders = [
       "Registration No",
       "First Name",
@@ -119,6 +126,19 @@ useEffect(() => {
     link.download = "registered_users_data.csv";
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Trigger modal
+  const downloadData = () => { setPasswordInput(""); setErrorMsg(""); setShowModal(true); };
+
+  // Validate password
+  const confirmDownload = () => {
+    if (passwordInput !== DOWNLOAD_PASSWORD) {
+      setErrorMsg("Incorrect password");
+      return;
+    }
+    setShowModal(false);
+    handleCSVDownload();
   };
 
   const sortData = (key) => {
@@ -331,6 +351,32 @@ useEffect(() => {
           </div>
         )}
       </div>
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h2 className="text-xl font-semibold mb-4">Enter Password</h2>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+              placeholder="Password"
+            />
+            {errorMsg && <div className="text-red-500 text-sm mb-2">{errorMsg}</div>}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >Cancel</button>
+              <button
+                onClick={confirmDownload}
+                className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+              >Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
